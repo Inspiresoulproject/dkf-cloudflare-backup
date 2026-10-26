@@ -4,5 +4,12 @@
   "assets": {
     "directory": "./static",
     "not_found_handling": "404-page"
-  }
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "dkf-backup-db",
+      "database_id": "2f817ea0-67a2-4aca-8c83-d3ab62d09051"
+    }
+  ]
 }
