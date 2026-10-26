@@ -1,9 +1,11 @@
 {
-  "name": "dkf-cloudflare-static-backup",
+  "name": "dkf-cloudflare-backup",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "scripts": {
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "check": "node --check src/index.js"
   },
   "devDependencies": {
     "wrangler": "^4.0.0"

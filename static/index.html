@@ -729,7 +729,7 @@ img,video,iframe{max-width:100%}
 @media(max-width:620px){.dkf-home-donors-grid{grid-template-columns:1fr}.dkf-home-donor-card{min-height:0;padding:1.5rem}.dkf-home-donor-card img{height:90px}}
 </style>
 </head>
-<body><div role="status" style="padding:20px;margin:18px auto;max-width:1080px;background:#fff4d5;color:#423400;border:2px solid #b9911b;border-radius:12px;font:600 17px/1.5 Arial,sans-serif;text-align:center">Digital Kids Foundation backup website is active. Online forms and application submissions are temporarily unavailable. Please email <a href="mailto:help@digitalkidsfoundation.org">help@digitalkidsfoundation.org</a> for assistance.</div>
+<body>
 <!-- ══ NAV ══════════════════════════════════════════ -->
 <nav id="nav">
 <div class="nav-in">
@@ -1082,7 +1082,53 @@ img,video,iframe{max-width:100%}
 <p class="eyebrow">Volunteer Application</p>
 <h2 class="form-title">Apply to Volunteer</h2>
 <p class="form-sub">Fill out the form below and our team will reach out within 3 business days to discuss next steps.</p>
-<div class="backup-form-notice" role="status" style="padding:22px;border:1px solid #c3d8d4;border-radius:12px;background:#f0f7f5;color:#143e3b"><strong>Temporarily unavailable on our backup website.</strong><p>To contact DKF or inquire about volunteering or donating a device, email <a href="mailto:help@digitalkidsfoundation.org">help@digitalkidsfoundation.org</a>.</p></div>
+<form action="/api/submit" id="vol-form" method="POST">
+<div class="dkf-turnstile" data-form="vol-form" aria-label="Security verification" style="margin:1rem 0;min-height:66px"></div>
+<!-- Formspree config -->
+<input name="_subject" type="hidden" value="New Volunteer Application — Digital Kids Foundation"/>
+<input name="_next" type="hidden" value=""/>
+<input name="_captcha" type="hidden" value="false"/>
+<div class="fg">
+<div class="fl"><label>First Name <span class="req">*</span></label><input class="fc" name="first_name" placeholder="Maria" required="" type="text"/></div>
+<div class="fl"><label>Last Name <span class="req">*</span></label><input class="fc" name="last_name" placeholder="Rodriguez" required="" type="text"/></div>
+<div class="fl"><label>Email Address <span class="req">*</span></label><input class="fc" name="email" placeholder="you@email.com" required="" type="email" maxlength="254" autocomplete="email" inputmode="email"/></div>
+<div class="fl"><label>Phone Number</label><input class="fc" name="phone" placeholder="(718) 555-0000" type="tel" maxlength="25" autocomplete="tel" inputmode="tel"/></div>
+<div class="fl"><label>Borough / City <span class="req">*</span></label><input class="fc" name="location" placeholder="Brooklyn, NY" required="" type="text"/></div>
+<div class="fl"><label>Age Range</label><select class="fc" name="age_range"><option value="">Select…</option><option>16–20</option><option>21–30</option><option>31–45</option><option>46–60</option><option>60+</option></select></div>
+<div class="fl fg-full"><label>Role of Interest <span class="req">*</span></label><select class="fc" name="role" required=""><option value="">Choose a primary role…</option><option>Community Outreach</option><option>Grant Writing</option><option>Content &amp; Photography</option><option>Open to Any Role</option></select></div>
+<div class="fl"><label>Availability <span class="req">*</span></label><select class="fc" name="availability" required=""><option value="">Select…</option><option>Weekday mornings</option><option>Weekday afternoons</option><option>Weekday evenings</option><option>Saturday</option><option>Sunday</option><option>Flexible / Any</option></select></div>
+<div class="fl"><label>Hours Per Week</label><select class="fc" name="hours_per_week"><option value="">How many hours?</option><option>1–3 hours</option><option>4–8 hours</option><option>8–16 hours</option><option>Full-time (16+)</option><option>One-time event only</option></select></div>
+<div class="fl fg-full"><label>Relevant Skills or Experience</label><textarea class="fc" name="skills" placeholder="e.g. I have 3 years of IT experience, know how to install Linux, and have done community outreach for local nonprofits…"></textarea></div>
+<div class="fl fg-full"><label>Why do you want to volunteer with DKF? <span class="req">*</span></label><textarea class="fc" name="motivation" placeholder="Tell us what motivates you to help kids access technology…" required=""></textarea></div>
+<div class="fl fg-full"><label style="margin-bottom:.7rem">I am also interested in:</label>
+<div class="cb-group">
+<label class="cb-item"><input type="checkbox"/><span>Organizing a device donation drive at my school or workplace</span></label>
+<label class="cb-item"><input type="checkbox"/><span>Volunteering at community events and pop-ups</span></label>
+<label class="cb-item"><input type="checkbox"/><span>Helping with social media and content creation</span></label>
+<label class="cb-item"><input type="checkbox"/><span>Being a long-term recurring volunteer (monthly commitment)</span></label>
+</div>
+</div>
+<div class="fl fg-full"><label class="cb-item" style="cursor:pointer"><input required="" type="checkbox"/><span>I agree to the <a href="/volunteer-terms/" target="_blank" rel="noopener noreferrer" style="color:var(--teal);text-decoration:underline">Volunteer Terms</a> and confirm all information is accurate. <span class="req">*</span></span></label></div>
+<!-- HONEYPOT: hidden from humans, bots fill it -->
+<div aria-hidden="true" class="hp-field"><label>Leave this empty</label><input autocomplete="off" name="website" tabindex="-1" type="text"/></div>
+<!-- MATH CAPTCHA -->
+<div class="captcha-wrap">
+<label>🤖 Quick check — prove you're human: <span class="req">*</span></label>
+<div class="captcha-row">
+<span class="captcha-q" id="vcap-q">Loading…</span>
+<span class="captcha-eq">=</span>
+<input autocomplete="off" class="captcha-inp" id="vcap-ans" inputmode="numeric" placeholder="?" type="number"/>
+<button class="captcha-refresh" onclick="genCaptcha('v')" type="button">↻ New question</button>
+</div>
+</div>
+<!-- Error message -->
+<div class="form-err" id="vol-err"></div>
+<div class="fg-full">
+<button class="btn btn-teal btn-lg" onclick="validateAndSubmit('vol-form','vcap-ans','v','vol-success','vol-err')" style="width:100%" type="button">Submit My Application →</button>
+<p class="form-note">Our team reviews applications within 3 business days. You'll receive a confirmation email shortly after submitting.</p>
+</div>
+</div>
+</form>
 <div class="fsuccess" id="vol-success"><div class="sicon">🎉</div><h3>Application Received!</h3><p>Your volunteer application has been sent to <strong>help@digitalkidsfoundation.org</strong>. Our team will reach out within 3 business days at the email you provided.</p><p style="margin-top:.7rem">In the meantime, you can also <button onclick="go('donate')" style="color:var(--teal);font-weight:700;background:none;border:none;cursor:pointer;text-decoration:underline">donate a device</button> to support our mission.</p></div>
 </div>
 </div>
@@ -1108,7 +1154,69 @@ img,video,iframe{max-width:100%}
 <p class="eyebrow">Donation Form</p>
 <h2 class="form-title">Choose How You'd Like to Give</h2>
 <p class="form-sub">Choose PayPal for a financial donation, or select Donate a Device to submit a device donation inquiry.</p>
-<div class="backup-form-notice" role="status" style="padding:22px;border:1px solid #c3d8d4;border-radius:12px;background:#f0f7f5;color:#143e3b"><strong>Temporarily unavailable on our backup website.</strong><p>To contact DKF or inquire about volunteering or donating a device, email <a href="mailto:help@digitalkidsfoundation.org">help@digitalkidsfoundation.org</a>.</p></div>
+<form action="/api/submit" id="don-form" method="POST">
+<div class="dkf-turnstile" data-form="don-form" aria-label="Security verification" style="margin:1rem 0;min-height:66px"></div>
+<!-- Formspree config -->
+<input name="_subject" type="hidden" value="New Donation Submission — Digital Kids Foundation"/>
+<input name="_next" type="hidden" value=""/>
+<input name="_captcha" type="hidden" value="false"/>
+<div class="fg">
+<div class="fl"><label>First Name <span class="req">*</span></label><input class="fc" name="first_name" placeholder="James" required="" type="text"/></div>
+<div class="fl"><label>Last Name <span class="req">*</span></label><input class="fc" name="last_name" placeholder="Thompson" required="" type="text"/></div>
+<div class="fl"><label>Email Address <span class="req">*</span></label><input class="fc" name="email" placeholder="you@email.com" required="" type="email" maxlength="254" autocomplete="email" inputmode="email"/></div>
+<div class="fl"><label>Phone Number</label><input class="fc" name="phone" placeholder="(718) 555-0000" type="tel" maxlength="25" autocomplete="tel" inputmode="tel"/></div>
+<div class="fl"><label>Organization / Company</label><input class="fc" name="organization" placeholder="Acme Corp (optional)" type="text"/></div>
+<div class="fl"><label>Donor Type</label><select class="fc" name="donor_type"><option>Individual</option><option>Company / Organization</option><option>School / University</option><option>Government / Public Agency</option></select></div>
+<!-- TOGGLE -->
+<div class="fl fg-full"><label style="margin-bottom:.75rem">What would you like to donate? <span class="req">*</span></label>
+<div class="ftoggle">
+<button class="ftbtn on" id="tb-money" onclick="switchDonate('money')" type="button"><span class="fi">💵</span><span>Financial Donation</span><span style="font-size:.73rem;font-weight:400;color:var(--ink-lt)">Help fund refurbishment</span></button>
+<button class="ftbtn" id="tb-device" onclick="switchDonate('device')" type="button"><span class="fi">💻</span><span>Donate a Device</span><span style="font-size:.73rem;font-weight:400;color:var(--ink-lt)">Laptop, tablet, or more</span></button>
+</div>
+</div>
+<!-- MONEY FIELDS -->
+<div class="fg-full" id="dkf-paypal-payment" style="background:#f1f8f6;border:1px solid #b9d9d2;border-radius:18px;padding:24px;margin:12px 0 20px;text-align:center">
+<h3 style="margin:0 0 10px;color:#173e3a">Donate securely with PayPal</h3>
+<p style="margin:0 0 18px;color:#45625d">Choose your amount and donation frequency in PayPal's secure checkout. No payment is collected through the information form below.</p>
+<div id="donate-button-container"><div id="donate-button"></div></div>
+<p style="font-size:.78rem;margin:12px 0 0;color:#647b76">PayPal processes the payment. Please wait for PayPal's confirmation before considering a donation complete.</p>
+</div>
+<div class="dfields show" id="df-money"><p class="form-note">For financial donations, please use the PayPal button above. The device donation form remains available under “Donate a Device.”</p></div>
+<!-- DEVICE FIELDS -->
+<div class="dfields" id="df-device">
+<div class="fl"><label>Device Type <span class="req">*</span></label><select class="fc" name="device_type"><option value="">Select device type…</option><option>Laptop</option><option>Tablet / iPad</option><option>Chromebook</option></select></div>
+<div class="fl"><label>Number of Devices <span class="req">*</span></label><select class="fc" name="device_quantity"><option>1</option><option>2</option><option>3–5</option><option>6–10</option><option>11–20</option><option>20+</option></select></div>
+<div class="fl"><label>Brand / Model (if known)</label><input class="fc" name="device_model" placeholder="e.g. Dell Latitude 7490" type="text"/></div>
+<div class="fl"><label>Condition <span class="req">*</span></label><select class="fc" name="device_condition"><option value="">Select condition…</option><option>Working — no issues</option><option>Working — minor issues</option></select></div>
+<div class="fl fg-full"><label>Preferred delivery method <span class="req">*</span></label><select class="fc" name="pickup_method"><option value="">Choose an option…</option><option>I can arrange drop-off after coordinating with DKF</option><option>I can discuss shipping options with DKF</option></select></div>
+<div class="fl fg-full"><label>Additional delivery details (optional)</label><input class="fc" name="pickup_address" placeholder="123 Main St, Brooklyn, NY 11201" type="text"/></div>
+<div class="fl fg-full"><label>Additional Notes</label><textarea class="fc" name="device_notes" placeholder="Any known issues, missing accessories, or other details…"></textarea></div>
+</div>
+<!-- SHARED FINAL -->
+<div class="fl fg-full"><label>How did you hear about us?</label><select class="fc" name="how_heard"><option value="">Select one…</option><option>Google / Search Engine</option><option>Social Media</option><option>Friend or Colleague</option><option>Employer or School</option><option>News / Press Coverage</option><option>Community Event</option><option>Other</option></select></div>
+<div class="fl fg-full"><label>Message (optional)</label><textarea class="fc" name="message" placeholder="Leave a note for us or for the child who will receive your donation…" style="min-height:80px"></textarea></div>
+<div class="fl fg-full"><label class="cb-item" style="cursor:pointer"><input type="checkbox"/><span>Keep me updated with news, impact stories, and future opportunities from DKF.</span></label></div>
+<div class="fl fg-full"><label class="cb-item" style="cursor:pointer"><input required="" type="checkbox"/><span>I confirm the information provided is accurate. <span class="req">*</span></span></label></div>
+<!-- HONEYPOT -->
+<div aria-hidden="true" class="hp-field"><label>Leave this empty</label><input autocomplete="off" name="website2" tabindex="-1" type="text"/></div>
+<!-- MATH CAPTCHA -->
+<div class="captcha-wrap fg-full">
+<label>🤖 Quick check — prove you're human: <span class="req">*</span></label>
+<div class="captcha-row">
+<span class="captcha-q" id="dcap-q">Loading…</span>
+<span class="captcha-eq">=</span>
+<input autocomplete="off" class="captcha-inp" id="dcap-ans" inputmode="numeric" placeholder="?" type="number"/>
+<button class="captcha-refresh" onclick="genCaptcha('d')" type="button">↻ New question</button>
+</div>
+</div>
+<!-- Error message -->
+<div class="form-err fg-full" id="don-err"></div>
+<div class="fg-full">
+<button id="dkf-device-submit" class="btn btn-amber btn-lg" onclick="validateAndSubmit('don-form','dcap-ans','d','don-success','don-err')" style="width:100%" type="button">Submit My Donation →</button>
+<p class="form-note">🔒 Your information is secure. Device donations receive a confirmation within 24 hours.</p>
+</div>
+</div>
+</form>
 <div class="fsuccess" id="don-success"><div class="sicon">💚</div><h3>Thank You for Your Generosity!</h3><p>Your donation has been sent to <strong>help@digitalkidsfoundation.org</strong>. Our team will follow up about your device donation inquiry.</p><p style="margin-top:.7rem">Want to do more? <button onclick="go('volunteer')" style="color:var(--teal);font-weight:700;background:none;border:none;cursor:pointer;text-decoration:underline">Become a volunteer →</button></p></div>
 </div>
 <!-- SIDEBAR -->
@@ -1176,7 +1284,57 @@ img,video,iframe{max-width:100%}
 <p class="eyebrow">Send Us a Message</p>
 <h2 class="form-title">We're here to help</h2>
 <p class="form-sub">Fill out the form below and someone from our team will get back to you at help@digitalkidsfoundation.org within 2 business days.</p>
-<div class="backup-form-notice" role="status" style="padding:22px;border:1px solid #c3d8d4;border-radius:12px;background:#f0f7f5;color:#143e3b"><strong>Temporarily unavailable on our backup website.</strong><p>To contact DKF or inquire about volunteering or donating a device, email <a href="mailto:help@digitalkidsfoundation.org">help@digitalkidsfoundation.org</a>.</p></div>
+<form action="/api/submit" id="con-form" method="POST">
+<div class="dkf-turnstile" data-form="con-form" aria-label="Security verification" style="margin:1rem 0;min-height:66px"></div>
+<input name="_subject" type="hidden" value="New Contact Message — Digital Kids Foundation"/>
+<input name="_captcha" type="hidden" value="false"/>
+<div class="fg">
+<div class="fl"><label>First Name <span class="req">*</span></label><input class="fc" name="first_name" placeholder="Alex" required="" type="text"/></div>
+<div class="fl"><label>Last Name <span class="req">*</span></label><input class="fc" name="last_name" placeholder="Johnson" required="" type="text"/></div>
+<div class="fl"><label>Email Address <span class="req">*</span></label><input class="fc" name="email" placeholder="you@email.com" required="" type="email" maxlength="254" autocomplete="email" inputmode="email"/></div>
+<div class="fl"><label>Phone Number <span style="color:var(--ink-lt);font-weight:400">(optional)</span></label><input class="fc" name="phone" placeholder="(718) 555-0000" type="tel" maxlength="25" autocomplete="tel" inputmode="tel"/></div>
+<div class="fl fg-full"><label>Organization / School <span style="color:var(--ink-lt);font-weight:400">(optional)</span></label><input class="fc" name="organization" placeholder="e.g. PS 147, Acme Corp, Brooklyn Community Center" type="text"/></div>
+<div class="fl fg-full"><label>Subject <span class="req">*</span></label>
+<select class="fc" name="subject" required="">
+<option value="">What is your message about?</option>
+<option>General Inquiry</option>
+<option>Donating a Device</option>
+<option>Financial Donation</option>
+<option>Volunteer Opportunities</option>
+<option>Corporate / School Partnership</option>
+<option>Host a Collection Drive</option>
+<option>Media / Press Inquiry</option>
+<option>Request Devices for Our Organization</option>
+<option>Other</option>
+</select>
+</div>
+<div class="fl fg-full"><label>Message <span class="req">*</span></label>
+<textarea class="fc" name="message" placeholder="Tell us how we can help. The more detail you provide, the better we can assist you…" required="" style="min-height:140px"></textarea>
+</div>
+<div class="fl fg-full"><label class="cb-item" style="cursor:pointer">
+<input name="newsletter" type="checkbox"/>
+<span>I'd like to receive occasional updates, impact stories, and news from Digital Kids Foundation.</span>
+</label></div>
+<!-- HONEYPOT -->
+<div aria-hidden="true" class="hp-field"><label>Leave this empty</label><input autocomplete="off" name="website3" tabindex="-1" type="text"/></div>
+<!-- MATH CAPTCHA -->
+<div class="captcha-wrap fg-full">
+<label>🤖 Quick check — prove you're human: <span class="req">*</span></label>
+<div class="captcha-row">
+<span class="captcha-q" id="ccap-q">Loading…</span>
+<span class="captcha-eq">=</span>
+<input autocomplete="off" class="captcha-inp" id="ccap-ans" inputmode="numeric" placeholder="?" type="number"/>
+<button class="captcha-refresh" onclick="genCaptcha('c')" type="button">↻ New question</button>
+</div>
+</div>
+<!-- Error -->
+<div class="form-err fg-full" id="con-err"></div>
+<div class="fg-full">
+<button class="btn btn-teal btn-lg" onclick="validateAndSubmit('con-form','ccap-ans','c','con-success','con-err')" style="width:100%" type="button">Send Message →</button>
+<p class="form-note">We respond to all messages within 2 business days. For urgent matters, email <a href="mailto:help@digitalkidsfoundation.org" style="color:var(--teal);font-weight:700">help@digitalkidsfoundation.org</a> directly.</p>
+</div>
+</div>
+</form>
 <div class="fsuccess" id="con-success">
 <div class="sicon">✉️</div>
 <h3>Message Sent!</h3>
@@ -1640,6 +1798,6 @@ stampFormTime('con-form');
   });
 })();
 </script>
-
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=dkfTurnstileReady&amp;render=explicit" async defer></script>
 </body>
 </html>

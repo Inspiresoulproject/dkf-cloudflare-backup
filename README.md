@@ -1,17 +1,23 @@
-# DKF static emergency backup (Cloudflare Workers)
+# Digital Kids Foundation — Cloudflare full backup (v2, TEST BEFORE FAILOVER)
 
-This is a **separate repository** for Cloudflare, not a replacement for the production DKF/Coolify repository.
+Source: `DKF-Approved-Policies-v12(2).zip`. Static pages copied from `public/` (not the older disabled-form backup). API behavior adapted from `server.js` and `verification-store.js`.
 
-## Cloudflare Git setup
-1. Create a NEW GitHub repository, e.g. `dkf-cloudflare-backup`, and upload this ZIP contents to its root. Do not push this backup package into the production `dkf` repository.
-2. On the Cloudflare Workers Git deployment screen, go Back and select the NEW repository.
-3. Project name: `dkf-backup`. Build command: leave blank. Deploy command: `npx wrangler deploy`. Path: `/`.
-4. Do not attach `digitalkidsfoundation.org` or change production DNS until the backup is tested.
-5. Verify the Workers URL, pages, images and that all forms show offline notices.
+## Deployment order — DO NOT CHANGE PRODUCTION DNS
 
-## Limitations
-- STATIC emergency backup only; volunteer, donation device inquiry, and contact forms are replaced with an offline message. Email verification does not run.
-- PayPal-related donation functionality and embedded external integrations must be reviewed in the live preview before treating them as functional.
-- The backup has no automatic failover. Manually changing Cloudflare routing requires separate configuration and testing.
-- The backup includes `X-Robots-Tag: noindex` and robots.txt disallow to discourage duplicate indexing.
-- Keep content synchronized by updating this separate repository when DKF production content changes.
+1. **Back up your current `dkf-cloudflare-backup` repository** and keep Coolify production unchanged. Upload the contents of this ZIP to the **root** of `dkf-cloudflare-backup` (replace old `static/index.html`, `src/index.js`, `wrangler.jsonc`; preserve the repo connection). Never upload `.env` or secrets.
+2. In Cloudflare D1 **dkf-backup-db**, open Console. Your existing `pending_verifications` table must already exist with `id`, `submission_type`, `email_hash`, `token_hash`, `encrypted_payload`, `created_at`, `expires_at`, `verified_at`. Run the SQL in `migrations/0001_form_backend.sql` **once**. If any `ALTER TABLE` column already exists, do not rerun that statement. Run SQL **before** deploying the Worker. The SQL is not automatically applied by the GitHub deploy.
+3. In Cloudflare Worker `dkf-backup` → Settings → Variables and Secrets, confirm `DB` D1 binding and `RESEND_API_KEY`, `TURNSTILE_SECRET_KEY`, `TURNSTILE_SITE_KEY`, `MAIL_FROM`, `MAIL_TO`, `VERIFICATION_ENCRYPTION_KEY` are configured. `VERIFICATION_TOKEN_SECRET` is not used by this version; do not delete it unless you know no other code needs it. Encryption key must be **64 hex characters or 32 random bytes encoded in base64**. If you generated a random 32-byte base64 key in PowerShell, it is supported.
+4. **Turnstile hostname:** Cloudflare Turnstile widget must allow the hostname used to test (`dkf-backup.fancy-haze-0b35.workers.dev` or your `backup.digitalkidsfoundation.org`). If it does not allow workers.dev, create a dedicated backup Turnstile widget and set its site/secret keys on the backup Worker only. Do not weaken the hostname check. The Worker checks that Turnstile's verified hostname equals the actual request hostname.
+5. For test email links, leave `PUBLIC_BASE_URL` unset so verification links use the backup hostname. If set, ensure it is the **backup hostname** during testing, not `digitalkidsfoundation.org`, or verification will hit Coolify. After failover you may set `PUBLIC_BASE_URL=https://digitalkidsfoundation.org` (optional: the Worker automatically uses the incoming hostname).
+6. Push to GitHub; Cloudflare deploys the Worker. Check `/api/health`, `/api/verification-config`, `/api/turnstile-config` and all site pages. Test Contact, Volunteer, Device Donation with **test data** and actual Turnstile and email verification. Check that DKF inbox gets each notification and volunteer receives acknowledgment. Inspect D1 `pending_verifications` states, but do not expose encrypted payloads or tokens.
+7. **Do not activate manual failover** until full end-to-end tests, operational handoff, and recovery/rollback plan are completed. The backup stores applications in D1 and sends them to `MAIL_TO`; it does **not** synchronize D1 records to Coolify. Email notifications provide a handoff, but delivery/reconciliation procedures must be established.
+
+## Security and limitations
+- 30-minute email verification links, SHA-256 token hashes, AES-256-GCM encrypted pending application payloads, atomic D1 token claims, durable rate limits (10 requests per IP hash per 10-minute bucket), Turnstile server-side hostname verification, request size and field validation.
+- Verification mail delivery may have an ambiguous result if a network request times out. Such rows are marked `needs_review`; **never blindly resend**. They require manual review of Resend logs and DKF inbox.
+- D1 table stores sensitive encrypted payloads for expired pending and completed records until purged. **Set up a scheduled retention cleanup** before public use. Suggested: delete completed records older than 7 days, pending expired records older than 7 days, and keep `needs_review` until resolved. No cleanup cron is included yet.
+- A pending verification begun on Coolify **will not work** on Cloudflare after failover, and vice versa; these are separate storage systems. Shared cross-platform storage or a migration process is needed for seamless in-flight continuity.
+- `MAIL_FROM` must be a verified Resend sending address. A working Worker binding is not proof that real mail sends.
+- D1 free-tier usage is subject to quotas. Site appearance is copied from the production source; the frontend is large (~2.3 MB).
+- Static assets from the production `public/` directory are used. Other Coolify-only features beyond the inspected routes have not been migrated.
+- Do not use this package to switch DNS automatically; manual failover configuration is separate.
