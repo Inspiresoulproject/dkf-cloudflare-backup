@@ -1,11 +1,26 @@
 {
   "name": "dkf-backup",
   "main": "src/index.js",
-  "compatibility_date": "2026-10-01",
+  "compatibility_date": "2026-11-13",
   "assets": {
     "directory": "./static",
     "binding": "ASSETS",
-    "run_worker_first": ["/api/*", "/verify-email", "/health", "/home", "/home/", "/about-us", "/about-us/", "/faq", "/faq/"] ,
+    "run_worker_first": [
+      "/api/*",
+      "/health",
+      "/mobile-turnstile",
+      "/laptop-verify",
+      "/laptop-status-verify",
+      "/verify-email",
+      "/verify-donation/*",
+      "/robots.txt",
+      "/home",
+      "/home/",
+      "/about-us",
+      "/about-us/",
+      "/faq",
+      "/faq/"
+    ],
     "not_found_handling": "404-page"
   },
   "d1_databases": [{
@@ -13,5 +28,8 @@
     "database_name": "dkf-backup-db",
     "database_id": "2f817ea0-67a2-4aca-8c83-d3ab62d09051",
     "migrations_dir": "migrations"
-  }]
+  }],
+  "triggers": {
+    "crons": ["17 6 * * *"]
+  }
 }
