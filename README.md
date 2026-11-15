@@ -105,3 +105,9 @@ D1 and the current Coolify PostgreSQL database are separate systems. New laptop 
 - `/donation-success/` retries server verification and pushes `paypal_donation_verified` only after a verified completed transaction.
 - The dataLayer event exposes `value`, `transaction_id`, and `currency` at the top level for GTM Data Layer Variables, and also includes an ecommerce object.
 - Server-side GA4 purchase reporting is opt-in via `GA4_SERVER_SIDE_PURCHASE=true` to avoid duplicate purchase events when GTM client tracking is active.
+
+
+## v10 PayPal IPN fix
+- PayPal IPN no longer requires REST Client ID/Secret; it verifies through PayPal's IPN validation endpoint and requires only D1 plus `PAYPAL_RECEIVER_EMAIL`.
+- `/api/paypal/donation-complete` now checks D1 first, so the Thank You page can recognize an IPN-verified donation even when PayPal REST API credentials are not configured.
+- Required Cloudflare variable: `PAYPAL_RECEIVER_EMAIL` must match the PayPal receiver/business email exactly.
