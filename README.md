@@ -98,3 +98,10 @@ The old `0001_form_backend.sql` is kept for repository history. v3 does not depe
 ## Important data note
 
 D1 and the current Coolify PostgreSQL database are separate systems. New laptop applications, inventory, allocations, PayPal records, and donor receipts created on the Cloudflare staging Worker are stored in `dkf-backup-db`; they are not automatically synchronized with the current Coolify database. Use test data on the backup hostname until final cutover/migration planning is complete.
+
+
+## PayPal / GTM verified donation tracking (v9)
+- The PayPal callback stores the transaction ID before server verification so the Thank You page can retry when PayPal reporting is delayed.
+- `/donation-success/` retries server verification and pushes `paypal_donation_verified` only after a verified completed transaction.
+- The dataLayer event exposes `value`, `transaction_id`, and `currency` at the top level for GTM Data Layer Variables, and also includes an ecommerce object.
+- Server-side GA4 purchase reporting is opt-in via `GA4_SERVER_SIDE_PURCHASE=true` to avoid duplicate purchase events when GTM client tracking is active.

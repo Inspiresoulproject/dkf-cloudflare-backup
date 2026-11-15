@@ -2582,6 +2582,9 @@ stampFormTime('con-form');
             var destination='/donation-success/?status=pending';
             try {
               if (params && params.tx) {
+                var pendingDonation={transaction_id:String(params.tx),value:params.amt || '',currency:String(params.cc || 'USD').toUpperCase()};
+                try { sessionStorage.setItem('dkf_pending_paypal_donation',JSON.stringify(pendingDonation)); }
+                catch(storageError) { console.warn('Unable to store pending donation tracking data',storageError); }
                 var response=await fetch('/api/paypal/donation-complete',{
                   method:'POST',
                   headers:{'Content-Type':'application/json'},
@@ -2593,7 +2596,13 @@ stampFormTime('con-form');
                   })
                 });
                 var result=await response.json().catch(function(){return {};});
-                if (response.ok && result.verified) destination='/donation-success/?status=verified';
+                if (response.ok && result.verified) {
+                  try {
+                    sessionStorage.setItem('dkf_verified_paypal_donation',JSON.stringify({transaction_id:result.transactionId,value:result.amount,currency:result.currency || 'USD',item_name:result.itemName || 'Donation to Digital Kids Foundation',item_id:result.itemNumber || 'dkf-general-donation'}));
+                    sessionStorage.removeItem('dkf_pending_paypal_donation');
+                  } catch(storageError) { console.warn('Unable to store verified donation tracking data',storageError); }
+                  destination='/donation-success/?status=verified';
+                }
               }
             } catch(error) {
               console.error('PayPal server verification is pending', error);

@@ -16,32 +16,69 @@
 <!-- End Google Tag Manager (noscript) -->
 <header><a href="/" class="brand">Digital Kids<small>FOUNDATION</small></a><nav><a href="/">Home</a></nav></header><main class="wrap"><section class="panel"><div class="seal" aria-hidden="true">♥</div><h1>Thank you for supporting<br><span class="accent">brighter futures.</span></h1><p>Your generosity helps Digital Kids Foundation work toward expanding access to laptops, technology, and digital opportunities for children in need.</p><p>Every act of support brings us closer to bridging the digital divide.</p><div class="note" id="payment-status-note">If you just completed a donation through PayPal, please check your PayPal account or email for the official transaction confirmation. DKF records a completed donation only after server-side verification.</div><div class="actions"><a class="btn primary" href="/">Return to DKF Homepage</a><a class="btn secondary" href="https://www.facebook.com/digitalkidsfoundation" target="_blank" rel="noopener noreferrer">Follow DKF on Facebook</a></div></section></main><footer>© Digital Kids Foundation Inc. · Expanding technology access for children in need</footer><script>
 (function(){
-  var status=new URLSearchParams(location.search).get('status');
   var note=document.getElementById('payment-status-note');
   if(!note)return;
-  if(status==='verified') {
-    note.textContent='Thank you. PayPal confirmed your completed donation, and DKF has recorded the transaction.';
-    try {
-      var raw=sessionStorage.getItem('dkf_verified_paypal_donation');
-      if(raw){
-        var donation=JSON.parse(raw);
-        var value=Number(donation.value);
-        if(donation.transaction_id && Number.isFinite(value) && value>0 && /^[A-Z]{3}$/.test(String(donation.currency||''))){
-          window.dataLayer=window.dataLayer||[];
-          window.dataLayer.push({
-            event:'paypal_donation_verified',
-            ecommerce:{
-              transaction_id:String(donation.transaction_id),
-              value:value,
-              currency:String(donation.currency),
-              items:[{item_id:String(donation.item_id||'dkf-general-donation'),item_name:String(donation.item_name||'Donation to Digital Kids Foundation'),price:value,quantity:1}]
-            }
-          });
-          sessionStorage.removeItem('dkf_verified_paypal_donation');
-        }
-      }
-    } catch(e) { console.warn('Verified donation tracking data unavailable',e); }
+  var params=new URLSearchParams(location.search);
+  var status=params.get('status')||'';
+
+  function parseStored(key){
+    try{var raw=sessionStorage.getItem(key);return raw?JSON.parse(raw):null}catch(e){return null}
   }
-  else if(status==='pending') note.textContent='Thank you. PayPal reported that the donation was completed, and DKF is finishing server-side verification. Please keep your PayPal confirmation email.';
+  function validDonation(d){
+    var value=Number(d&&d.value);
+    return !!(d&&d.transaction_id&&Number.isFinite(value)&&value>0&&/^[A-Z]{3}$/.test(String(d.currency||'').toUpperCase()));
+  }
+  function pushVerified(d){
+    if(!validDonation(d))return false;
+    var value=Number(d.value),currency=String(d.currency).toUpperCase(),transactionId=String(d.transaction_id);
+    var item={item_id:String(d.item_id||'dkf-general-donation'),item_name:String(d.item_name||'Donation to Digital Kids Foundation'),price:value,quantity:1};
+    window.dataLayer=window.dataLayer||[];
+    window.dataLayer.push({
+      event:'paypal_donation_verified',
+      transaction_id:transactionId,
+      value:value,
+      currency:currency,
+      items:[item],
+      ecommerce:{transaction_id:transactionId,value:value,currency:currency,items:[item]}
+    });
+    try{
+      sessionStorage.removeItem('dkf_verified_paypal_donation');
+      sessionStorage.removeItem('dkf_pending_paypal_donation');
+    }catch(e){}
+    note.textContent='Thank you. PayPal confirmed your completed donation, and DKF has recorded the transaction.';
+    try{history.replaceState(null,'',location.pathname+'?status=verified')}catch(e){}
+    return true;
+  }
+  async function verifyPending(d){
+    if(!d||!d.transaction_id)return false;
+    var waits=[0,1400,2800,5200,8500,12000];
+    for(var i=0;i<waits.length;i++){
+      if(waits[i])await new Promise(function(resolve){setTimeout(resolve,waits[i])});
+      try{
+        note.textContent=i===0?'Thank you. DKF is verifying your completed PayPal donation...':'Thank you. PayPal confirmed the payment; DKF is finishing secure verification...';
+        var response=await fetch('/api/paypal/donation-complete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({transactionId:d.transaction_id,amount:d.value||'',currency:d.currency||''})});
+        var result=await response.json().catch(function(){return {}});
+        if(response.ok&&result.verified){
+          return pushVerified({transaction_id:result.transactionId,value:result.amount,currency:result.currency||d.currency||'USD',item_name:result.itemName||'Donation to Digital Kids Foundation',item_id:result.itemNumber||'dkf-general-donation'});
+        }
+        if(response.status!==202&&response.status!==502&&response.status!==503)break;
+      }catch(e){}
+    }
+    note.textContent='Thank you. Your PayPal payment was completed, and DKF is still confirming the transaction securely. Please keep your PayPal confirmation email.';
+    return false;
+  }
+
+  var verified=parseStored('dkf_verified_paypal_donation');
+  if(verified&&pushVerified(verified))return;
+
+  var pending=parseStored('dkf_pending_paypal_donation');
+  if(!pending){
+    var tx=params.get('tx')||params.get('transaction_id');
+    if(tx)pending={transaction_id:tx,value:params.get('amt')||params.get('amount')||'',currency:String(params.get('cc')||params.get('currency')||'USD').toUpperCase()};
+  }
+  if(pending){verifyPending(pending);return;}
+
+  if(status==='verified') note.textContent='Thank you. PayPal confirmed your completed donation, and DKF has recorded the transaction.';
+  else if(status==='pending') note.textContent='Thank you. Your PayPal payment was completed, and DKF is waiting for secure server-side confirmation. Please keep your PayPal confirmation email.';
 })();
 </script></body></html>
