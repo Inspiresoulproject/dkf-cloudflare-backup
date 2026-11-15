@@ -19,7 +19,29 @@
   var status=new URLSearchParams(location.search).get('status');
   var note=document.getElementById('payment-status-note');
   if(!note)return;
-  if(status==='verified') note.textContent='Thank you. PayPal confirmed your completed donation, and DKF has recorded the transaction.';
+  if(status==='verified') {
+    note.textContent='Thank you. PayPal confirmed your completed donation, and DKF has recorded the transaction.';
+    try {
+      var raw=sessionStorage.getItem('dkf_verified_paypal_donation');
+      if(raw){
+        var donation=JSON.parse(raw);
+        var value=Number(donation.value);
+        if(donation.transaction_id && Number.isFinite(value) && value>0 && /^[A-Z]{3}$/.test(String(donation.currency||''))){
+          window.dataLayer=window.dataLayer||[];
+          window.dataLayer.push({
+            event:'paypal_donation_verified',
+            ecommerce:{
+              transaction_id:String(donation.transaction_id),
+              value:value,
+              currency:String(donation.currency),
+              items:[{item_id:String(donation.item_id||'dkf-general-donation'),item_name:String(donation.item_name||'Donation to Digital Kids Foundation'),price:value,quantity:1}]
+            }
+          });
+          sessionStorage.removeItem('dkf_verified_paypal_donation');
+        }
+      }
+    } catch(e) { console.warn('Verified donation tracking data unavailable',e); }
+  }
   else if(status==='pending') note.textContent='Thank you. PayPal reported that the donation was completed, and DKF is finishing server-side verification. Please keep your PayPal confirmation email.';
 })();
 </script></body></html>
